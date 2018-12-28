@@ -1,0 +1,36 @@
+version: '3'
+services:
+
+  db:
+    container_name: psql
+    restart: always
+    image: psql
+    build:
+      context: ./db
+    volumes:
+      - ./db/data/:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234  # To be moved to environment file
+      POSTGRES_DATABASE: your_database
+    ports:
+      - 5432:5432
+    networks:
+      - psql-pgql
+
+  graphql:
+    container_name: pgql
+    restart: always
+    image: graphile/postgraphile
+    depends_on:
+      - db
+    ports:
+      - 5000:5000
+    command: ["postgraphile", "--connection", "postgres://postgres:1234@db:5432/your_database", "--host", "0.0.0.0", "--port", "5000", "--schema", "your_schema"]
+    links:
+      - db
+    networks:
+      - psql-pgql
+
+networks:
+  psql-pgql:
